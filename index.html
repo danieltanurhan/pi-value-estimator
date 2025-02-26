@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Value Estimator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Pi Network SDK -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <!-- Load modules in correct order: Pi integration first, then API services, then main app -->
+    <script src="js/pi-integration.js"></script>
+    <script src="js/api-services.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pi Value Estimator</h1>
+            <p>Check the current value of your Pi coins</p>
+        </header>
+
+        <main>
+            <div id="auth-section">
+                <button id="sign-in" class="btn primary-btn">Sign in with Pi</button>
+                <p id="auth-message"></p>
+            </div>
+
+            <div id="user-info" class="hidden">
+                <div class="info-card">
+                    <h2>Welcome, <span id="username">Pioneer</span>!</h2>
+                    <div class="balance-section">
+                        <div class="balance-item">
+                            <h3>Your Pi Balance</h3>
+                            <p id="pi-balance">0</p>
+                        </div>
+                        <div class="balance-item">
+                            <h3>Current Pi Value</h3>
+                            <p id="pi-value">Loading...</p>
+                        </div>
+                        <div class="balance-divider"></div>
+                        <div class="balance-item total">
+                            <h3>Estimated Total Value</h3>
+                            <p id="total-value">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="currency-selector">
+                    <label for="currency">Select currency:</label>
+                    <select id="currency" class="select-css">
+                        <option value="usd">USD</option>
+                        <option value="eur">EUR</option>
+                        <option value="gbp">GBP</option>
+                        <option value="jpy">JPY</option>
+                        <option value="cny">CNY</option>
+                    </select>
+                </div>
+                
+                <div class="refresh-section">
+                    <button id="refresh-btn" class="btn secondary-btn">Refresh Values</button>
+                    <p id="last-updated">Last updated: Never</p>
+                </div>
+            </div>
+
+            <div id="loading" class="hidden">
+                <div class="loader"></div>
+                <p>Loading data...</p>
+            </div>
+
+            <div id="error-section" class="hidden">
+                <div class="error-card">
+                    <h3>Error</h3>
+                    <p id="error-message">Something went wrong.</p>
+                    <button id="retry-btn" class="btn primary-btn">Try Again</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>This app is not affiliated with the Pi Core Team. Values shown are estimates only.</p>
+        </footer>
+    </div>
+
+    <!-- Load main app JS last, after DOM is ready and other modules are loaded -->
+    <script src="js/app.js"></script>
+</body>
+</html>
