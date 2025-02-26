@@ -19,6 +19,38 @@
         </header>
 
         <main>
+            <!-- Public Value Display Section (Shown before authentication) -->
+            <div id="public-value-section">
+                <div class="info-card">
+                    <h2>Current Pi Value</h2>
+                    <div class="public-value-display">
+                        <div class="value-container">
+                            <div class="pi-logo">π</div>
+                            <div class="value-info">
+                                <p class="value-label">1 Pi equals</p>
+                                <p id="public-pi-value" class="value-amount">Loading...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="currency-selector public-selector">
+                            <label for="public-currency">Select currency:</label>
+                            <select id="public-currency" class="select-css">
+                                <option value="usd">USD</option>
+                                <option value="eur">EUR</option>
+                                <option value="gbp">GBP</option>
+                                <option value="jpy">JPY</option>
+                                <option value="cny">CNY</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p id="public-last-updated" class="last-updated-info">Last updated: Never</p>
+                </div>
+                
+                <div class="auth-cta">
+                    <p>Sign in with Pi to see the value of your Pi balance</p>
+                </div>
+            </div>
+
             <div id="auth-section">
                 <button id="sign-in" class="btn primary-btn">Sign in with Pi</button>
                 <p id="auth-message"></p>

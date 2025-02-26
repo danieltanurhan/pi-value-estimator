@@ -4,6 +4,109 @@
  * including Pi value from CoinGecko and mock Pi balance.
  */
 
+// Store the latest Pi values for different currencies
+let cachedPiValues = {
+    usd: null,
+    eur: null,
+    gbp: null,
+    jpy: null,
+    cny: null,
+    lastUpdated: null
+};
+
+/**
+ * Initialize API services and fetch initial Pi value
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch initial Pi value in USD
+    fetchAndCachePiValues();
+    
+    // Set up a refresh interval (every 5 minutes)
+    setInterval(fetchAndCachePiValues, 5 * 60 * 1000);
+});
+
+/**
+ * Fetch Pi values for all supported currencies and cache them
+ * @returns {Promise<Object>} Object containing Pi values for each currency
+ */
+async function fetchAndCachePiValues() {
+    try {
+        // We'll fetch values for all currencies at once to minimize API calls
+        const currencies = ['usd', 'eur', 'gbp', 'jpy', 'cny'].join(',');
+        const apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=${currencies}`;
+        
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`API responded with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Check if we have actual data
+        if (data['pi-network']) {
+            // Update our cache with real values
+            Object.keys(data['pi-network']).forEach(currency => {
+                cachedPiValues[currency] = data['pi-network'][currency];
+            });
+        } else {
+            // Use mock values if real data isn't available
+            cachedPiValues = {
+                usd: 1.42,
+                eur: 0.39,
+                gbp: 0.33,
+                jpy: 46.8,
+                cny: 2.89
+            };
+        }
+        
+        // Update timestamp
+        cachedPiValues.lastUpdated = new Date();
+        
+        // Trigger an event that the values have been updated
+        const event = new CustomEvent('piValueUpdated', { detail: cachedPiValues });
+        document.dispatchEvent(event);
+        
+        return cachedPiValues;
+    } catch (error) {
+        console.error("Error fetching Pi values:", error);
+        
+        // If we don't have any cached values yet, use mock values
+        if (!cachedPiValues.usd) {
+            cachedPiValues = {
+                usd: 0.42,
+                eur: 0.39,
+                gbp: 0.33,
+                jpy: 46.8,
+                cny: 2.89,
+                lastUpdated: new Date()
+            };
+            
+            // Trigger the event even with mock data
+            const event = new CustomEvent('piValueUpdated', { detail: cachedPiValues });
+            document.dispatchEvent(event);
+        }
+        
+        return cachedPiValues;
+    }
+}
+
+/**
+ * Get the current Pi value for a specific currency
+ * @param {string} currency The currency code (usd, eur, etc.)
+ * @returns {number} The current Pi value
+ */
+function getCurrentPiValue(currency) {
+    return cachedPiValues[currency] || getMockPiValue(currency);
+}
+
+/**
+ * Get the timestamp of the last Pi value update
+ * @returns {Date|null} The date of the last update or null if never updated
+ */
+function getLastUpdateTime() {
+    return cachedPiValues.lastUpdated;
+}
+
 /**
  * Fetch user's Pi balance
  * Note: This is a mock function. In a real app, this would be an API call to your backend
@@ -26,30 +129,16 @@ async function fetchPiBalance() {
  * @returns {Promise<number>} The current Pi value in the specified currency
  */
 async function fetchPiValue(currency) {
-    try {
-        // In production, you should make this request from your backend
-        // to avoid CORS issues and protect your API keys
-        const apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=${currency}`;
-        
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-            throw new Error(`API responded with status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // For demo purposes, if Pi Network isn't listed yet, use a mock value
-        if (!data['pi-network'] || !data['pi-network'][currency]) {
-            // Use mock value if real data not available
-            return getMockPiValue(currency);
-        } else {
-            return data['pi-network'][currency];
-        }
-    } catch (error) {
-        console.error("Error fetching Pi value:", error);
-        // Use mock value on error
-        return getMockPiValue(currency);
+    // First check if we have a cached value that's recent (less than 5 minutes old)
+    const now = new Date();
+    if (cachedPiValues[currency] && cachedPiValues.lastUpdated &&
+        (now - cachedPiValues.lastUpdated) < 5 * 60 * 1000) {
+        return cachedPiValues[currency];
     }
+    
+    // Otherwise fetch a new value
+    await fetchAndCachePiValues();
+    return cachedPiValues[currency] || getMockPiValue(currency);
 }
 
 /**
@@ -100,5 +189,7 @@ function formatCurrencyValue(value, currency) {
 window.ApiServices = {
     fetchPiBalance,
     fetchPiValue,
-    formatCurrencyValue
+    formatCurrencyValue,
+    getCurrentPiValue,
+    getLastUpdateTime
 };

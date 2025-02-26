@@ -25,6 +25,9 @@ const refreshButton = document.getElementById('refresh-btn');
 const lastUpdatedElement = document.getElementById('last-updated');
 const errorMessageElement = document.getElementById('error-message');
 const retryButton = document.getElementById('retry-btn');
+const publicPiValueElement = document.getElementById('public-pi-value');
+const publicLastUpdatedElement = document.getElementById('public-last-updated');
+const publicCurrencySelector = document.getElementById('public-currency');
 
 /**
  * Initialize the application when DOM is loaded
@@ -32,7 +35,49 @@ const retryButton = document.getElementById('retry-btn');
 document.addEventListener('DOMContentLoaded', function() {
     // Setup event listeners
     setupEventListeners();
+    
+    // Initialize the public value display
+    initializePublicValueDisplay();
+    
+    // Listen for Pi value updates
+    document.addEventListener('piValueUpdated', function(event) {
+        updatePublicValueDisplay();
+    });
 });
+
+/**
+ * Initialize the public value display
+ */
+function initializePublicValueDisplay() {
+    // Get the current Pi value
+    const currentValue = window.ApiServices.getCurrentPiValue(currentCurrency);
+    
+    if (currentValue) {
+        // If we already have a value, update the display
+        updatePublicValueDisplay();
+    } else {
+        // If not, show loading state
+        publicPiValueElement.textContent = 'Loading...';
+    }
+}
+
+/**
+ * Update the public value display
+ */
+function updatePublicValueDisplay() {
+    const selectedCurrency = publicCurrencySelector ? publicCurrencySelector.value : 'usd';
+    const currentValue = window.ApiServices.getCurrentPiValue(selectedCurrency);
+    const formattedValue = window.ApiServices.formatCurrencyValue(currentValue, selectedCurrency);
+    
+    // Update the displayed value
+    publicPiValueElement.textContent = formattedValue;
+    
+    // Update the last updated time
+    const lastUpdated = window.ApiServices.getLastUpdateTime();
+    if (lastUpdated) {
+        publicLastUpdatedElement.textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}`;
+    }
+}
 
 /**
  * Setup event listeners for the app
@@ -41,20 +86,33 @@ function setupEventListeners() {
     // Sign in button
     signInButton.addEventListener('click', handleSignIn);
     
-    // Currency selector
-    currencySelector.addEventListener('change', function() {
-        currentCurrency = this.value;
-        calculateAndDisplayValues();
-    });
+    // Currency selector for authenticated user
+    if (currencySelector) {
+        currencySelector.addEventListener('change', function() {
+            currentCurrency = this.value;
+            calculateAndDisplayValues();
+        });
+    }
+    
+    // Public currency selector
+    if (publicCurrencySelector) {
+        publicCurrencySelector.addEventListener('change', function() {
+            updatePublicValueDisplay();
+        });
+    }
     
     // Refresh button
-    refreshButton.addEventListener('click', refreshData);
+    if (refreshButton) {
+        refreshButton.addEventListener('click', refreshData);
+    }
     
     // Retry button
-    retryButton.addEventListener('click', function() {
-        hideError();
-        refreshData();
-    });
+    if (retryButton) {
+        retryButton.addEventListener('click', function() {
+            hideError();
+            refreshData();
+        });
+    }
 }
 
 /**
@@ -146,6 +204,9 @@ async function refreshData() {
         
         // Update last updated time
         updateLastUpdatedTime();
+        
+        // Update public display as well
+        updatePublicValueDisplay();
         
         hideLoading();
         showUserInfo();
